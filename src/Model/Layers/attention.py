@@ -4,12 +4,13 @@ import torch.nn as nn
 from torch import nn
 from torch_geometric.utils import unbatch
 
+
 class Attention(nn.Module):
     """
-       Self Attention Layer
-       Given $X\in \mathbb{R}^{n \times in_feature}$, the attention is calculated by: $a=Softmax(W_2tanh(W_1X))$, where
-       $W_1 \in \mathbb{R}^{hidden \times in_feature}$, $W_2 \in \mathbb{R}^{out_feature \times hidden}$.
-       The final output is: $out=aX$, which is unrelated with input $n$.
+    Self Attention Layer
+    Given $X\in \mathbb{R}^{n \times in_feature}$, the attention is calculated by: $a=Softmax(W_2tanh(W_1X))$, where
+    $W_1 \in \mathbb{R}^{hidden \times in_feature}$, $W_2 \in \mathbb{R}^{out_feature \times hidden}$.
+    The final output is: $out=aX$, which is unrelated with input $n$.
     """
 
     def __init__(self, *, hidden, in_feature, out_feature):
@@ -39,20 +40,20 @@ class Attention(nn.Module):
         """
         x = torch.tanh(torch.matmul(self.w1, X.transpose(1, 0)))
         x = torch.matmul(self.w2, x)
-        print(f'x: {x.shape}')
+        print(f"x: {x.shape}")
         attn = torch.nn.functional.softmax(x, dim=-1)
-        print(f'att: {attn.shape}')
+        print(f"att: {attn.shape}")
         x = torch.matmul(attn, X)
-        print(f'x_out: {x.shape}')
+        print(f"x_out: {x.shape}")
         return x, attn
-    
+
 
 class GlobalAttention(nn.Module):
     """
-       Self Attention Layer
-       Given $X\in \mathbb{R}^{n \times in_feature}$, the attention is calculated by: $a=Softmax(W_2tanh(W_1X))$, where
-       $W_1 \in \mathbb{R}^{hidden \times in_feature}$, $W_2 \in \mathbb{R}^{out_feature \times hidden}$.
-       The final output is: $out=aX$, which is unrelated with input $n$.
+    Self Attention Layer
+    Given $X\in \mathbb{R}^{n \times in_feature}$, the attention is calculated by: $a=Softmax(W_2tanh(W_1X))$, where
+    $W_1 \in \mathbb{R}^{hidden \times in_feature}$, $W_2 \in \mathbb{R}^{out_feature \times hidden}$.
+    The final output is: $out=aX$, which is unrelated with input $n$.
     """
 
     def __init__(self, in_feature, hidden_size, out_feature):

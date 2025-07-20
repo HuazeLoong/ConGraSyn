@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "MulConSyn: A Multiscale Conformational and Cellular Context Fusion Framework for Synergistic Drug Combination Prediction"
+message: "If you use this work, please cite it as below."
+authors:
+  - family-names: "Loong"
+    given-names: "Huaze"
+    email: "loong@wust.edu.cn"
+    affiliation: "Wuhan University of Science and Technology"
+version: "0.1.0"
+date-released: "2025-07-20"
+repository-code: "https://github.com/HuazeLoong/MulConSyn"
+license: "MIT"

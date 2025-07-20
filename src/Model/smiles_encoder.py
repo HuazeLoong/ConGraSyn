@@ -10,29 +10,35 @@ from torch.autograd import Variable
 SMILES-Transformer（编码器+位置编码）
 对 SMILES 进行 masked 语言建模预训练
 """
-class PositionalEncoding(nn.Module):
 
+
+class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout, max_len=5000):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
 
         # Compute the positional encodings once in log space.
         pe = torch.zeros(max_len, d_model)  # (T,H)
-        position = torch.arange(0., max_len).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0., d_model, 2) * -(math.log(10000.0) / d_model))
+        position = torch.arange(0.0, max_len).unsqueeze(1)
+        div_term = torch.exp(
+            torch.arange(0.0, d_model, 2) * -(math.log(10000.0) / d_model)
+        )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0)
-        self.register_buffer('pe', pe)
+        self.register_buffer("pe", pe)
 
     def forward(self, x):
-        x = x + Variable(self.pe[:, :x.size(1)].to(x.device), requires_grad=False)
+        x = x + Variable(self.pe[:, : x.size(1)].to(x.device), requires_grad=False)
         return self.dropout(x)
+
 
 class PreLNTransformerEncoderLayer(nn.Module):
     def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1):
         super().__init__()
-        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout, batch_first=False)
+        self.self_attn = nn.MultiheadAttention(
+            d_model, nhead, dropout=dropout, batch_first=False
+        )
         self.linear1 = nn.Linear(d_model, dim_feedforward)
         self.dropout = nn.Dropout(dropout)
         self.linear2 = nn.Linear(dim_feedforward, d_model)
@@ -47,14 +53,22 @@ class PreLNTransformerEncoderLayer(nn.Module):
 
     def forward(self, src, src_mask=None, src_key_padding_mask=None):
         # Pre-LN attention
-        src2 = self.self_attn(self.norm1(src), self.norm1(src), self.norm1(src),
-                              attn_mask=src_mask, key_padding_mask=src_key_padding_mask)[0]
+        src2 = self.self_attn(
+            self.norm1(src),
+            self.norm1(src),
+            self.norm1(src),
+            attn_mask=src_mask,
+            key_padding_mask=src_key_padding_mask,
+        )[0]
         src = src + self.dropout1(src2)
 
         # Pre-LN feedforward
-        src2 = self.linear2(self.dropout(self.activation(self.linear1(self.norm2(src)))))
+        src2 = self.linear2(
+            self.dropout(self.activation(self.linear1(self.norm2(src))))
+        )
         src = src + self.dropout2(src2)
         return src
+
 
 class TrfmSeq2seq(nn.Module):
     def __init__(self, in_size, hidden_size, out_size, n_layers, dropout=0.1):
@@ -66,10 +80,17 @@ class TrfmSeq2seq(nn.Module):
         # self.trfm = nn.Transformer(d_model=hidden_size, nhead=4,
         #                            num_encoder_layers=n_layers, num_decoder_layers=n_layers,
         #                            dim_feedforward=hidden_size)
-        self.encoder_layers = nn.ModuleList([
-            PreLNTransformerEncoderLayer(d_model=hidden_size, nhead=4, dim_feedforward=hidden_size, dropout=dropout)
-            for _ in range(n_layers)
-        ])
+        self.encoder_layers = nn.ModuleList(
+            [
+                PreLNTransformerEncoderLayer(
+                    d_model=hidden_size,
+                    nhead=4,
+                    dim_feedforward=hidden_size,
+                    dropout=dropout,
+                )
+                for _ in range(n_layers)
+            ]
+        )
         self.encoder_norm = nn.LayerNorm(hidden_size)
         self.out = nn.Linear(hidden_size, out_size)
 
@@ -93,8 +114,8 @@ class TrfmSeq2seq(nn.Module):
             src = src.unsqueeze(1)  # (T, 1)
 
         src = src.to(self.embed.weight.device)
-        embedded = self.embed(src)           # (T,B,H)
-        embedded = self.pe(embedded)         # (T,B,H)
+        embedded = self.embed(src)  # (T,B,H)
+        embedded = self.pe(embedded)  # (T,B,H)
 
         # output = embedded
         # for i in range(self.trfm.encoder.num_layers - 1):
@@ -113,11 +134,13 @@ class TrfmSeq2seq(nn.Module):
         #     output = self.trfm.encoder.norm(output)
 
         # 分子表示拼接：[mean, max, first token, penultimate first token]
-        mean_feat = torch.mean(output, dim=0)          # (B,H)
-        max_feat = torch.max(output, dim=0).values     # (B,H)
-        first_feat = output[0, :, :]                   # (B,H)
-        penul_feat = penul[0, :, :]                    # (B,H)
-        return torch.cat([mean_feat, max_feat, first_feat, penul_feat], dim=1)  # (B, 4H)
+        mean_feat = torch.mean(output, dim=0)  # (B,H)
+        max_feat = torch.max(output, dim=0).values  # (B,H)
+        first_feat = output[0, :, :]  # (B,H)
+        penul_feat = penul[0, :, :]  # (B,H)
+        return torch.cat(
+            [mean_feat, max_feat, first_feat, penul_feat], dim=1
+        )  # (B, 4H)
 
     def encode_one(self, src):
         """
@@ -149,11 +172,13 @@ class TrfmSeq2seq(nn.Module):
         #     output = self.trfm.encoder.norm(output)  # (T,B,H)
         output = output.detach().numpy()
         return output
-    
+
 
 """
 调用模型 encode 获取分子表示并训练任务
 """
+
+
 def Get_Atom_Feature(smi, model):
     """
     :param smi: 单个SMILES串
@@ -171,7 +196,7 @@ def Get_Atom_Feature(smi, model):
     while i < len(smi):
         if now < len(atom_list):
             atom = atom_list[now]
-            candidate = smi[i:i + len(atom)]
+            candidate = smi[i : i + len(atom)]
 
             if candidate.upper() == atom.upper():
                 Atom_Fea[now] = fea[k]
@@ -181,17 +206,35 @@ def Get_Atom_Feature(smi, model):
                 continue
 
         # 处理特殊符号（顺序不可乱）
-        if smi[i:i+2] in ['+1', '-1', '+2', '-2', '+3', '-3', '+4', '-4', '+5', '-5', '+6', '-6', '+7', '-7', '+8', '-8']:
+        if smi[i : i + 2] in [
+            "+1",
+            "-1",
+            "+2",
+            "-2",
+            "+3",
+            "-3",
+            "+4",
+            "-4",
+            "+5",
+            "-5",
+            "+6",
+            "-6",
+            "+7",
+            "-7",
+            "+8",
+            "-8",
+        ]:
             i += 2
-        elif smi[i] == '%' and i + 2 < len(smi):
+        elif smi[i] == "%" and i + 2 < len(smi):
             i += 3
-        elif smi[i:i+2] == '@@':
+        elif smi[i : i + 2] == "@@":
             i += 2
         else:
             i += 1
         k += 1
 
     return Atom_Fea
+
 
 def Get_MolFP(mol, model):
     """

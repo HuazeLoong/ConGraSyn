@@ -4,20 +4,29 @@ import torch.nn as nn
 from torch import nn
 from torch.nn import ModuleList
 from Model.mol_feature import MolFeature
-from Model.smiles_encoder  import *
+from Model.smiles_encoder import *
 from torch_geometric import nn as pnn
 from Model.Layers.attention import Attention, GlobalAttention
-from torch_geometric.nn import BatchNorm, GINEConv, global_add_pool, global_mean_pool, global_max_pool
+from torch_geometric.nn import (
+    BatchNorm,
+    GINEConv,
+    global_add_pool,
+    global_mean_pool,
+    global_max_pool,
+)
+
 
 class GIN_Net(nn.Module):
-    def __init__(self,
-                 node_channels,
-                 edge_channels,
-                 hidden_channels,
-                 out_channels,
-                 num_layers,
-                 predict=False,
-                 num_classes=None):
+    def __init__(
+        self,
+        node_channels,
+        edge_channels,
+        hidden_channels,
+        out_channels,
+        num_layers,
+        predict=False,
+        num_classes=None,
+    ):
         super().__init__()
 
         self.predict = predict
@@ -29,24 +38,21 @@ class GIN_Net(nn.Module):
             nn.ReLU(),
         )
         if True:
-            self.node_to_hid = nn.Linear(node_channels+256, hidden_channels)
+            self.node_to_hid = nn.Linear(node_channels + 256, hidden_channels)
         else:
             self.node_to_hid = nn.Linear(node_channels, hidden_channels)
-        self.attn_aggr = Attention(in_feature=out_channels,
-                                   hidden=1024,
-                                   out_feature=out_channels)
+        self.attn_aggr = Attention(
+            in_feature=out_channels, hidden=1024, out_feature=out_channels
+        )
 
         for _ in range(num_layers):
             conv = GINEConv(nn=self.nn_layer, edge_dim=MolFeature().get_bond_dim())
             self.convs.append(conv)
             self.batch_norms.append(BatchNorm(hidden_channels))
-        self.lin1 = pnn.Linear(in_channels=hidden_channels,
-                               out_channels=1024)
-        self.lin2 = pnn.Linear(in_channels=1024,
-                               out_channels=out_channels)
+        self.lin1 = pnn.Linear(in_channels=hidden_channels, out_channels=1024)
+        self.lin2 = pnn.Linear(in_channels=1024, out_channels=out_channels)
         if self.predict:
-            self.linout = pnn.Linear(in_channels=out_channels,
-                                     out_channels=num_classes)
+            self.linout = pnn.Linear(in_channels=out_channels, out_channels=num_classes)
 
         # if config.aggr_type == 'attention':
         #     self.readout = GlobalAttention(in_feature=out_channels,
@@ -65,7 +71,7 @@ class GIN_Net(nn.Module):
         # else:
         #     self.readout = global_add_pool
 
-        self.device = torch.device('cuda')
+        self.device = torch.device("cuda")
 
     def forward(self, X):
         edge_index = X.edge_index

@@ -7,7 +7,7 @@ from tqdm import tqdm
 from torch.nn import Linear
 from torch import Tensor, nn
 from torch.nn import ModuleList
-from Model.smiles_encoder  import *
+from Model.smiles_encoder import *
 from Model.mol_feature import MolFeature
 from Model.Layers.pnaConv import PNAConv
 from Model.Layers.attention import GlobalAttention
@@ -22,6 +22,7 @@ from torch_geometric.nn.resolver import (
     activation_resolver,
     normalization_resolver,
 )
+
 
 class BasicGNN(torch.nn.Module):
     r"""An abstract class for implementing basic GNN models.
@@ -57,6 +58,7 @@ class BasicGNN(torch.nn.Module):
         **kwargs (optional): Additional arguments of the underlying
             :class:`torch_geometric.nn.conv.MessagePassing` layers.
     """
+
     def __init__(
         self,
         in_channels: int,
@@ -101,26 +103,22 @@ class BasicGNN(torch.nn.Module):
             in_channels += 128
 
         if num_layers > 1:
-            self.convs.append(
-                self.init_conv(in_channels, hidden_channels, **kwargs))
+            self.convs.append(self.init_conv(in_channels, hidden_channels, **kwargs))
             if isinstance(in_channels, (tuple, list)):
                 in_channels = (hidden_channels, hidden_channels)
             else:
                 in_channels = hidden_channels
         for _ in range(num_layers - 2):
-            self.convs.append(
-                self.init_conv(in_channels, hidden_channels, **kwargs))
+            self.convs.append(self.init_conv(in_channels, hidden_channels, **kwargs))
             if isinstance(in_channels, (tuple, list)):
                 in_channels = (hidden_channels, hidden_channels)
             else:
                 in_channels = hidden_channels
         if out_channels is not None and jk is None:
             self._is_conv_to_out = True
-            self.convs.append(
-                self.init_conv(in_channels, out_channels, **kwargs))
+            self.convs.append(self.init_conv(in_channels, out_channels, **kwargs))
         else:
-            self.convs.append(
-                self.init_conv(in_channels, hidden_channels, **kwargs))
+            self.convs.append(self.init_conv(in_channels, hidden_channels, **kwargs))
 
         self.norms = None
         if norm is not None:
@@ -135,11 +133,11 @@ class BasicGNN(torch.nn.Module):
             if jk is not None:
                 self.norms.append(copy.deepcopy(norm_layer))
 
-        if jk is not None and jk != 'last':
+        if jk is not None and jk != "last":
             self.jk = JumpingKnowledge(jk, hidden_channels, num_layers)
 
         if jk is not None:
-            if jk == 'cat':
+            if jk == "cat":
                 in_channels = num_layers * hidden_channels
             else:
                 in_channels = hidden_channels
@@ -162,8 +160,9 @@ class BasicGNN(torch.nn.Module):
         # else:
         #     self.readout = global_add_pool
 
-    def init_conv(self, in_channels: Union[int, Tuple[int, int]],
-                  out_channels: int, **kwargs) -> MessagePassing:
+    def init_conv(
+        self, in_channels: Union[int, Tuple[int, int]], out_channels: int, **kwargs
+    ) -> MessagePassing:
         raise NotImplementedError
 
     def reset_parameters(self):
@@ -171,16 +170,17 @@ class BasicGNN(torch.nn.Module):
             conv.reset_parameters()
         for norm in self.norms or []:
             norm.reset_parameters()
-        if hasattr(self, 'jk'):
+        if hasattr(self, "jk"):
             self.jk.reset_parameters()
-        if hasattr(self, 'lin'):
+        if hasattr(self, "lin"):
             self.lin.reset_parameters()
 
     def forward(
-        self, X,
+        self,
+        X,
         edge_weight: OptTensor = None,
     ) -> Tensor:
-        X = X.to(torch.device('cuda'))
+        X = X.to(torch.device("cuda"))
         x, edge_index, edge_attr = X.x, X.edge_index, X.edge_attr
         if True and not self.pnanet:
             pre_x = self.atom_agg(X.pre_x)
@@ -191,8 +191,9 @@ class BasicGNN(torch.nn.Module):
             # As such, we rely on a static solution to pass optional edge
             # weights and edge attributes to the module.
             if self.supports_edge_weight and self.supports_edge_attr:
-                x = self.convs[i](x, edge_index, edge_weight=edge_weight,
-                                  edge_attr=edge_attr)
+                x = self.convs[i](
+                    x, edge_index, edge_weight=edge_weight, edge_attr=edge_attr
+                )
             elif self.supports_edge_weight:
                 x = self.convs[i](x, edge_index, edge_weight=edge_weight)
             elif self.supports_edge_attr:
@@ -208,11 +209,11 @@ class BasicGNN(torch.nn.Module):
             if self.act is not None and not self.act_first:
                 x = self.act(x)
             x = F.dropout(x, p=self.dropout, training=self.training)
-            if hasattr(self, 'jk'):
+            if hasattr(self, "jk"):
                 xs.append(x)
 
-        x = self.jk(xs) if hasattr(self, 'jk') else x
-        x = self.lin(x) if hasattr(self, 'lin') else x
+        x = self.jk(xs) if hasattr(self, "jk") else x
+        x = self.lin(x) if hasattr(self, "lin") else x
 
         x = self.readout(x, batch=X.batch)
         # if config.aggr_type == 'attention': # sum
@@ -221,9 +222,12 @@ class BasicGNN(torch.nn.Module):
         return x
 
     @torch.no_grad()
-    def inference(self, loader: NeighborLoader,
-                  device: Optional[torch.device] = None,
-                  progress_bar: bool = False) -> Tensor:
+    def inference(
+        self,
+        loader: NeighborLoader,
+        device: Optional[torch.device] = None,
+        progress_bar: bool = False,
+    ) -> Tensor:
         r"""Performs layer-wise inference on large-graphs using
         :class:`~torch_geometric.loader.NeighborLoader`.
         :class:`~torch_geometric.loader.NeighborLoader` should sample the the
@@ -232,7 +236,7 @@ class BasicGNN(torch.nn.Module):
         nodes in the graph.
         Only applicable in case :obj:`jk=None` or `jk='last'`.
         """
-        assert self.jk_mode is None or self.jk_mode == 'last'
+        assert self.jk_mode is None or self.jk_mode == "last"
         assert isinstance(loader, NeighborLoader)
         assert len(loader.dataset) == loader.data.num_nodes
         assert len(loader.node_sampler.num_neighbors) == 1
@@ -240,7 +244,7 @@ class BasicGNN(torch.nn.Module):
         # assert not loader.shuffle  # TODO (matthias) does not work :(
         if progress_bar:
             pbar = tqdm(total=len(self.convs) * len(loader))
-            pbar.set_description('Inference')
+            pbar.set_description("Inference")
 
         x_all = loader.data.x.cpu()
         loader.data.n_id = torch.arange(x_all.size(0))
@@ -249,11 +253,11 @@ class BasicGNN(torch.nn.Module):
             xs: List[Tensor] = []
             for batch in loader:
                 x = x_all[batch.n_id].to(device)
-                if hasattr(batch, 'adj_t'):
+                if hasattr(batch, "adj_t"):
                     edge_index = batch.adj_t.to(device)
                 else:
                     edge_index = batch.edge_index.to(device)
-                x = self.convs[i](x, edge_index)[:batch.batch_size]
+                x = self.convs[i](x, edge_index)[: batch.batch_size]
                 if i == self.num_layers - 1 and self.jk_mode is None:
                     xs.append(x.cpu())
                     if progress_bar:
@@ -265,7 +269,7 @@ class BasicGNN(torch.nn.Module):
                     x = self.norms[i](x)
                 if self.act is not None and not self.act_first:
                     x = self.act(x)
-                if i == self.num_layers - 1 and hasattr(self, 'lin'):
+                if i == self.num_layers - 1 and hasattr(self, "lin"):
                     x = self.lin(x)
                 xs.append(x.cpu())
                 if progress_bar:
@@ -278,8 +282,11 @@ class BasicGNN(torch.nn.Module):
         return x_all
 
     def __repr__(self) -> str:
-        return (f'{self.__class__.__name__}({self.in_channels}, '
-                f'{self.out_channels}, num_layers={self.num_layers})')
+        return (
+            f"{self.__class__.__name__}({self.in_channels}, "
+            f"{self.out_channels}, num_layers={self.num_layers})"
+        )
+
 
 class PNA(BasicGNN):
     r"""The Graph Neural Network from the `"Principal Neighbourhood Aggregation
@@ -318,6 +325,7 @@ class PNA(BasicGNN):
     supports_edge_weight = False
     supports_edge_attr = True
 
-    def init_conv(self, in_channels: int, out_channels: int,
-                  **kwargs) -> MessagePassing:
+    def init_conv(
+        self, in_channels: int, out_channels: int, **kwargs
+    ) -> MessagePassing:
         return PNAConv(in_channels, out_channels, **kwargs)

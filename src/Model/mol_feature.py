@@ -9,6 +9,8 @@ from rdkit import Chem
     将 RDKit 分子对象（Chem.Mol）转换为图神经网络（GNN）输入特征的实用类，
     它实现了原子特征和键特征的离散化、索引化和独热编码（one-hot）处理。
 """
+
+
 def safe_index(l, e):
     """
     Return index of element e in list l. If e is not present, return the last index
@@ -18,7 +20,8 @@ def safe_index(l, e):
     except:
         return len(l) - 1
 
-class MolFeature():
+
+class MolFeature:
     # 原子/键属性的离散值列表
     allowable_features = {
         "possible_atomic_num_list": list(range(1, 119)) + ["misc"],
@@ -59,7 +62,6 @@ class MolFeature():
         feature = MolFeature.one_hot_atoms(feature)
         return feature
 
-
     @staticmethod
     def get_bond_feature(mol: Chem.Mol):
         edge_index = []
@@ -96,17 +98,39 @@ class MolFeature():
         :return: list
         """
         atom_feature = [
-            safe_index(MolFeature.allowable_features["possible_atomic_num_list"], atom.GetAtomicNum()),
-            MolFeature.allowable_features["possible_chirality_list"].index(str(atom.GetChiralTag())),
-            safe_index(MolFeature.allowable_features["possible_degree_list"], atom.GetTotalDegree()),
-            safe_index(MolFeature.allowable_features["possible_formal_charge_list"], atom.GetFormalCharge()),
-            safe_index(MolFeature.allowable_features["possible_numH_list"], atom.GetTotalNumHs()),
             safe_index(
-                MolFeature.allowable_features["possible_number_radical_e_list"], atom.GetNumRadicalElectrons()
+                MolFeature.allowable_features["possible_atomic_num_list"],
+                atom.GetAtomicNum(),
             ),
-            safe_index(MolFeature.allowable_features["possible_hybridization_list"], str(atom.GetHybridization())),
-            MolFeature.allowable_features["possible_is_aromatic_list"].index(atom.GetIsAromatic()),
-            MolFeature.allowable_features["possible_is_in_ring_list"].index(atom.IsInRing()),
+            MolFeature.allowable_features["possible_chirality_list"].index(
+                str(atom.GetChiralTag())
+            ),
+            safe_index(
+                MolFeature.allowable_features["possible_degree_list"],
+                atom.GetTotalDegree(),
+            ),
+            safe_index(
+                MolFeature.allowable_features["possible_formal_charge_list"],
+                atom.GetFormalCharge(),
+            ),
+            safe_index(
+                MolFeature.allowable_features["possible_numH_list"],
+                atom.GetTotalNumHs(),
+            ),
+            safe_index(
+                MolFeature.allowable_features["possible_number_radical_e_list"],
+                atom.GetNumRadicalElectrons(),
+            ),
+            safe_index(
+                MolFeature.allowable_features["possible_hybridization_list"],
+                str(atom.GetHybridization()),
+            ),
+            MolFeature.allowable_features["possible_is_aromatic_list"].index(
+                atom.GetIsAromatic()
+            ),
+            MolFeature.allowable_features["possible_is_in_ring_list"].index(
+                atom.IsInRing()
+            ),
         ]
         return atom_feature
 
@@ -145,18 +169,30 @@ class MolFeature():
         :return: list
         """
         bond_feature = [
-            safe_index(MolFeature.allowable_features["possible_bond_type_list"], str(bond.GetBondType())),
-            MolFeature.allowable_features["possible_bond_stereo_list"].index(str(bond.GetStereo())),
-            MolFeature.allowable_features["possible_is_conjugated_list"].index(bond.GetIsConjugated()),
+            safe_index(
+                MolFeature.allowable_features["possible_bond_type_list"],
+                str(bond.GetBondType()),
+            ),
+            MolFeature.allowable_features["possible_bond_stereo_list"].index(
+                str(bond.GetStereo())
+            ),
+            MolFeature.allowable_features["possible_is_conjugated_list"].index(
+                bond.GetIsConjugated()
+            ),
         ]
         return bond_feature
 
     @staticmethod
     def get_bond_feature_dims_list():
         return list(
-            map(len,[MolFeature.allowable_features["possible_bond_type_list"],
-                     MolFeature.allowable_features["possible_bond_stereo_list"],
-                     MolFeature.allowable_features["possible_is_conjugated_list"]],)
+            map(
+                len,
+                [
+                    MolFeature.allowable_features["possible_bond_type_list"],
+                    MolFeature.allowable_features["possible_bond_stereo_list"],
+                    MolFeature.allowable_features["possible_is_conjugated_list"],
+                ],
+            )
         )
 
     @staticmethod
@@ -174,15 +210,29 @@ class MolFeature():
         ] = atom_feature
 
         feature_dict = {
-            "atomic_num": MolFeature.allowable_features["possible_atomic_num_list"][atomic_num_idx],
-            "chirality": MolFeature.allowable_features["possible_chirality_list"][chirality_idx],
+            "atomic_num": MolFeature.allowable_features["possible_atomic_num_list"][
+                atomic_num_idx
+            ],
+            "chirality": MolFeature.allowable_features["possible_chirality_list"][
+                chirality_idx
+            ],
             "degree": MolFeature.allowable_features["possible_degree_list"][degree_idx],
-            "formal_charge": MolFeature.allowable_features["possible_formal_charge_list"][formal_charge_idx],
+            "formal_charge": MolFeature.allowable_features[
+                "possible_formal_charge_list"
+            ][formal_charge_idx],
             "num_h": MolFeature.allowable_features["possible_numH_list"][num_h_idx],
-            "num_rad_e": MolFeature.allowable_features["possible_number_radical_e_list"][number_radical_e_idx],
-            "hybridization": MolFeature.allowable_features["possible_hybridization_list"][hybridization_idx],
-            "is_aromatic": MolFeature.allowable_features["possible_is_aromatic_list"][is_aromatic_idx],
-            "is_in_ring": MolFeature.allowable_features["possible_is_in_ring_list"][is_in_ring_idx],
+            "num_rad_e": MolFeature.allowable_features[
+                "possible_number_radical_e_list"
+            ][number_radical_e_idx],
+            "hybridization": MolFeature.allowable_features[
+                "possible_hybridization_list"
+            ][hybridization_idx],
+            "is_aromatic": MolFeature.allowable_features["possible_is_aromatic_list"][
+                is_aromatic_idx
+            ],
+            "is_in_ring": MolFeature.allowable_features["possible_is_in_ring_list"][
+                is_in_ring_idx
+            ],
         }
 
         return feature_dict
@@ -191,9 +241,15 @@ class MolFeature():
     def bond_feature_vector_to_dict(bond_feature):
         [bond_type_idx, bond_stereo_idx, is_conjugated_idx] = bond_feature
         feature_dict = {
-            "bond_type": MolFeature.allowable_features["possible_bond_type_list"][bond_type_idx],
-            "bond_stereo": MolFeature.allowable_features["possible_bond_stereo_list"][bond_stereo_idx],
-            "is_conjugated": MolFeature.allowable_features["possible_is_conjugated_list"][is_conjugated_idx],
+            "bond_type": MolFeature.allowable_features["possible_bond_type_list"][
+                bond_type_idx
+            ],
+            "bond_stereo": MolFeature.allowable_features["possible_bond_stereo_list"][
+                bond_stereo_idx
+            ],
+            "is_conjugated": MolFeature.allowable_features[
+                "possible_is_conjugated_list"
+            ][is_conjugated_idx],
         }
         return feature_dict
 
@@ -203,7 +259,9 @@ class MolFeature():
         one_hots = []
         bonds = bonds.reshape((-1, len(MolFeature.get_bond_feature_dims_list())))
         for i in range(bonds.shape[1]):
-            one_hots.append(F.one_hot(bonds[:, i], num_classes=vocab_sizes[i]).to(bonds.device))
+            one_hots.append(
+                F.one_hot(bonds[:, i], num_classes=vocab_sizes[i]).to(bonds.device)
+            )
         return torch.cat(one_hots, dim=1).to(torch.float32)
 
     @staticmethod
@@ -212,6 +270,8 @@ class MolFeature():
         one_hots = []
         atoms = atoms.reshape((-1, len(MolFeature.get_atom_feature_dims_list())))
         for i in range(atoms.shape[1]):
-            one_hots.append(F.one_hot(atoms[:, i], num_classes=vocab_sizes[i]).to(atoms.device))
+            one_hots.append(
+                F.one_hot(atoms[:, i], num_classes=vocab_sizes[i]).to(atoms.device)
+            )
 
         return torch.cat(one_hots, dim=1).to(torch.float32)

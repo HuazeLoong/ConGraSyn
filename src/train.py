@@ -22,6 +22,7 @@ torch.cuda.manual_seed_all(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
+
 def train(model, device, drug1_loader_train, drug2_loader_train, optimizer, epoch):
     print("Training on {} samples...".format(len(drug1_loader_train.dataset)))
     model.train()
@@ -66,9 +67,10 @@ def train(model, device, drug1_loader_train, drug2_loader_train, optimizer, epoc
                     loss.item(),
                 )
             )
-    
+
     avg_train_loss = total_loss / len(drug1_loader_train)
     return avg_train_loss
+
 
 def predicting(model, device, drug1_loader_test, drug2_loader_test, loss_fn=None):
     model.eval()
@@ -83,7 +85,7 @@ def predicting(model, device, drug1_loader_test, drug2_loader_test, loss_fn=None
             data1 = data[0].to(device)
             data2 = data[1].to(device)
             output = model(data1, data2)
-            
+
             # 计算 loss（如果提供了 loss_fn）
             if loss_fn is not None:
                 y = data1.y.view(-1).long().to(device)
@@ -96,7 +98,9 @@ def predicting(model, device, drug1_loader_test, drug2_loader_test, loss_fn=None
             predicted_labels = list(map(lambda x: np.argmax(x), ys))
             predicted_scores = list(map(lambda x: x[1], ys))
             total_preds = torch.cat((total_preds, torch.Tensor(predicted_scores)), 0)
-            total_prelabels = torch.cat((total_prelabels, torch.Tensor(predicted_labels)), 0)
+            total_prelabels = torch.cat(
+                (total_prelabels, torch.Tensor(predicted_labels)), 0
+            )
             total_labels = torch.cat((total_labels, data1.y.view(-1, 1).cpu()), 0)
 
     avg_test_loss = total_loss / len(drug1_loader_test) if loss_fn is not None else None
@@ -104,7 +108,7 @@ def predicting(model, device, drug1_loader_test, drug2_loader_test, loss_fn=None
         total_labels.numpy().flatten(),
         total_preds.numpy().flatten(),
         total_prelabels.numpy().flatten(),
-        avg_test_loss
+        avg_test_loss,
     )
 
 
@@ -112,7 +116,7 @@ modeling = MultiSyn
 
 TRAIN_BATCH_SIZE = 128
 TEST_BATCH_SIZE = 128
-LR = 0.00001 # 0.0001
+LR = 0.00001  # 0.0001
 LOG_INTERVAL = 20
 NUM_EPOCHS = 200
 
@@ -152,19 +156,31 @@ for i in range(5):
     drug1_data_train = drug1_data[train_num]
     drug1_data_test = drug1_data[test_num]
     drug1_loader_train = DataLoader(
-        drug1_data_train, batch_size=TRAIN_BATCH_SIZE, shuffle=None, collate_fn=custom_collate
+        drug1_data_train,
+        batch_size=TRAIN_BATCH_SIZE,
+        shuffle=None,
+        collate_fn=custom_collate,
     )
     drug1_loader_test = DataLoader(
-        drug1_data_test, batch_size=TRAIN_BATCH_SIZE, shuffle=None, collate_fn=custom_collate
+        drug1_data_test,
+        batch_size=TRAIN_BATCH_SIZE,
+        shuffle=None,
+        collate_fn=custom_collate,
     )
 
     drug2_data_test = drug2_data[test_num]
     drug2_data_train = drug2_data[train_num]
     drug2_loader_train = DataLoader(
-        drug2_data_train, batch_size=TRAIN_BATCH_SIZE, shuffle=None, collate_fn=custom_collate
+        drug2_data_train,
+        batch_size=TRAIN_BATCH_SIZE,
+        shuffle=None,
+        collate_fn=custom_collate,
     )
     drug2_loader_test = DataLoader(
-        drug2_data_test, batch_size=TRAIN_BATCH_SIZE, shuffle=None, collate_fn=custom_collate
+        drug2_data_test,
+        batch_size=TRAIN_BATCH_SIZE,
+        shuffle=None,
+        collate_fn=custom_collate,
     )
 
     # model = modeling(deg=deg).to(device)
@@ -184,25 +200,35 @@ for i in range(5):
 
     best_auc_train = 0
     best_auc_test = 0
-    
-    best_loss = float('inf')
+
+    best_loss = float("inf")
     best_auc = 0
     patience = 20
     counter = 0
-    
+
     start_time = time.time()
     for epoch in range(NUM_EPOCHS):
         train_loss = train(
             model, device, drug1_loader_train, drug2_loader_train, optimizer, epoch + 1
         )
-        T_p, S_p, Y_p, test_loss = predicting(model, device, drug1_loader_test, drug2_loader_test, loss_fn=loss_fn)
+        T_p, S_p, Y_p, test_loss = predicting(
+            model, device, drug1_loader_test, drug2_loader_test, loss_fn=loss_fn
+        )
         # T is correct label
         # S is predict score
         # Y is predict label
         elapsed_time = time.time() - start_time
         elapsed_time_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
         best_auc_test, auc_test = compute_preformence(
-            T_p, S_p, Y_p, best_auc_test, file_AUCs_test, epoch + 1, elapsed_time_str, train_loss, test_loss
+            T_p,
+            S_p,
+            Y_p,
+            best_auc_test,
+            file_AUCs_test,
+            epoch + 1,
+            elapsed_time_str,
+            train_loss,
+            test_loss,
         )
 
         # early stop

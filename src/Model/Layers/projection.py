@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 
+
 class DEFAULTS:
     DROP_RATE = 0.1
+
 
 class AtomProjection(nn.Module):
     def __init__(self, d_atom, d_hid, d_output):
@@ -15,7 +17,7 @@ class AtomProjection(nn.Module):
             # nn.BatchNorm1d(d_hid),
             nn.SiLU(),
             nn.Dropout(p=DEFAULTS.DROP_RATE),
-            nn.Linear(d_hid, d_output)
+            nn.Linear(d_hid, d_output),
         )
 
     def forward(self, z, mask=None):
@@ -34,7 +36,7 @@ class AtomFGProjection(nn.Module):
             nn.LayerNorm(d_hid),
             nn.ReLU(),
             nn.Dropout(p=DEFAULTS.DROP_RATE),
-            nn.Linear(d_hid, d_output)
+            nn.Linear(d_hid, d_output),
         )
 
     def forward(self, z, mask=None):
@@ -53,7 +55,7 @@ class BondFGProjection(nn.Module):
             nn.LayerNorm(d_hid),
             nn.ReLU(),
             nn.Dropout(p=DEFAULTS.DROP_RATE),
-            nn.Linear(d_hid, d_output)
+            nn.Linear(d_hid, d_output),
         )
 
     def forward(self, z, mask=None):
@@ -68,15 +70,13 @@ class AtomPairProjection(nn.Module):
         super(AtomPairProjection, self).__init__()
 
         self.linear_in = nn.Sequential(
-            nn.Linear(d_atom, d_hid * 2),
-            nn.GELU(),
-            nn.LayerNorm(d_hid * 2)
+            nn.Linear(d_atom, d_hid * 2), nn.GELU(), nn.LayerNorm(d_hid * 2)
         )
 
         # self.linear_out = nn.Linear(d_hid ** 2, d_output)
 
-        self.linear_out1 = nn.Linear(d_hid ** 2, 11)
-        self.linear_out2 = nn.Linear(d_hid ** 2, d_output)
+        self.linear_out1 = nn.Linear(d_hid**2, 11)
+        self.linear_out2 = nn.Linear(d_hid**2, d_output)
 
     def forward(self, z, mask=None):
         ab = self.linear_in(z)
@@ -106,7 +106,7 @@ class AtomAngleProjection(nn.Module):
             nn.BatchNorm1d(d_hid),
             nn.ReLU(),
             nn.Dropout(p=DEFAULTS.DROP_RATE),
-            nn.Linear(d_hid, d_output)
+            nn.Linear(d_hid, d_output),
         )
 
     def forward(self, z, angel_atom_table, mask=None):
@@ -114,9 +114,11 @@ class AtomAngleProjection(nn.Module):
         indices = torch.nonzero(valid_entries)
         indices_i, indices_j = indices[:, 0], indices[:, 1]
 
-        x = z[indices_i, angel_atom_table[indices_i, indices_j, 0]] + z[
-            indices_i, angel_atom_table[indices_i, indices_j, 1]] + z[
-                indices_i, angel_atom_table[indices_i, indices_j, 2]]
+        x = (
+            z[indices_i, angel_atom_table[indices_i, indices_j, 0]]
+            + z[indices_i, angel_atom_table[indices_i, indices_j, 1]]
+            + z[indices_i, angel_atom_table[indices_i, indices_j, 2]]
+        )
 
         x = self.linear_seq(x)
         return x
@@ -129,15 +131,13 @@ class AtomPairProjectionBin(nn.Module):
         super(AtomPairProjectionBin, self).__init__()
 
         self.linear_in = nn.Sequential(
-            nn.Linear(d_atom, d_hid * 2),
-            nn.GELU(),
-            nn.LayerNorm(d_hid * 2)
+            nn.Linear(d_atom, d_hid * 2), nn.GELU(), nn.LayerNorm(d_hid * 2)
         )
 
         # self.linear_out = nn.Linear(d_hid ** 2, d_output)
 
-        self.linear_out1 = nn.Linear(d_hid ** 2, 21)
-        self.linear_out2 = nn.Linear(d_hid ** 2, 30)
+        self.linear_out1 = nn.Linear(d_hid**2, 21)
+        self.linear_out2 = nn.Linear(d_hid**2, 30)
 
     def forward(self, z, mask=None):
         ab = self.linear_in(z)
@@ -163,7 +163,7 @@ class AtomAngleProjectionBin(nn.Module):
             nn.BatchNorm1d(d_hid),
             nn.ReLU(),
             nn.Dropout(p=DEFAULTS.DROP_RATE),
-            nn.Linear(d_hid, d_output)
+            nn.Linear(d_hid, d_output),
         )
 
     def forward(self, z, angel_atom_table, mask=None):
@@ -171,9 +171,11 @@ class AtomAngleProjectionBin(nn.Module):
         indices = torch.nonzero(valid_entries)
         indices_i, indices_j = indices[:, 0], indices[:, 1]
 
-        x = z[indices_i, angel_atom_table[indices_i, indices_j, 0]] + z[
-            indices_i, angel_atom_table[indices_i, indices_j, 1]] + z[
-                indices_i, angel_atom_table[indices_i, indices_j, 2]]
+        x = (
+            z[indices_i, angel_atom_table[indices_i, indices_j, 0]]
+            + z[indices_i, angel_atom_table[indices_i, indices_j, 1]]
+            + z[indices_i, angel_atom_table[indices_i, indices_j, 2]]
+        )
 
         x = self.linear_seq(x)
         return x

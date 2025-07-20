@@ -21,7 +21,8 @@ from ProcessorData.token_dicts import *
 from rdkit import RDLogger  # ✅ 添加这行导入
 
 # ✅ 屏蔽所有 RDKit 的警告输出（包括弃用提示）
-RDLogger.DisableLog('rdApp.*')
+RDLogger.DisableLog("rdApp.*")
+
 
 def preprocess_unique_smiles(unique_smiles, max_len=130):
     print(f"唯一 SMILES 数量：{len(unique_smiles)}，开始统一预处理...")
@@ -34,7 +35,9 @@ def preprocess_unique_smiles(unique_smiles, max_len=130):
     for smi in tqdm(unique_smiles, desc="预处理 SMILES"):
         try:
             fp_dict[smi] = get_fingerprint(smi)
-            atom_dict[smi] = torch.tensor(smi_tokenizer(smi, max_len=max_len, padding=True)).to(torch.int)
+            atom_dict[smi] = torch.tensor(
+                smi_tokenizer(smi, max_len=max_len, padding=True)
+            ).to(torch.int)
             mol_array = get_array([split(smi.strip())]).squeeze(0)
             # print("mol_array", mol_array.shape)
             mol_dict[smi] = mol_array
@@ -44,10 +47,11 @@ def preprocess_unique_smiles(unique_smiles, max_len=130):
 
     return fp_dict, atom_dict, mol_dict, graph_dict
 
+
 def creat_data(datafile):
     data_file = os.path.join(DATA_DIR, datafile)
     df = pd.read_csv(data_file + ".csv")
-    
+
     # ---------------------- 新增：扫描最大节点数和最大边数 ----------------------
     # print("预处理：扫描最大节点数和最大边数...")
     # all_smiles = set(df["drug1_smiles"]).union(df["drug2_smiles"])
@@ -98,10 +102,24 @@ def creat_data(datafile):
     print("分子图处理完毕！")
 
     print("数据维度：")
-    print("药物数量 =", drug1.shape, "；SMILES token 向量 =", drug1_tensor.shape,
-        "；指纹 =", fp1.shape, "；分词向量 =", xid1.shape,
-        "分子图1 数量 =", len(graph1), "；分子图2 数量 =", len(graph2),
-        "；细胞 =", cell.shape, "；标签 =", label.shape)
+    print(
+        "药物数量 =",
+        drug1.shape,
+        "；SMILES token 向量 =",
+        drug1_tensor.shape,
+        "；指纹 =",
+        fp1.shape,
+        "；分词向量 =",
+        xid1.shape,
+        "分子图1 数量 =",
+        len(graph1),
+        "；分子图2 数量 =",
+        len(graph2),
+        "；细胞 =",
+        cell.shape,
+        "；标签 =",
+        label.shape,
+    )
 
     MyTestDataset(
         root=DATAS_DIR,
@@ -125,6 +143,7 @@ def creat_data(datafile):
         xt=cell,
         y=label,
     )
+
 
 if __name__ == "__main__":
     datafile_list = ["drugcom_12415"]

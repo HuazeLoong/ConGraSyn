@@ -87,6 +87,7 @@ class PNAConv(MessagePassing):
           edge features :math:`(|\mathcal{E}|, D)` *(optional)*
         - **output:** node features :math:`(|\mathcal{V}|, F_{out})`
     """
+
     def __init__(
         self,
         in_channels: int,
@@ -104,7 +105,6 @@ class PNAConv(MessagePassing):
         train_norm: bool = False,
         **kwargs,
     ):
-
         aggr = DegreeScalerAggregation(aggregators, scalers, deg, train_norm)
         super().__init__(aggr=aggr, node_dim=0, **kwargs)
 
@@ -153,8 +153,9 @@ class PNAConv(MessagePassing):
             reset(nn)
         self.lin.reset_parameters()
 
-    def forward(self, x: Tensor, edge_index: Adj,
-                edge_attr: OptTensor = None) -> Tensor:
+    def forward(
+        self, x: Tensor, edge_index: Adj, edge_attr: OptTensor = None
+    ) -> Tensor:
         """"""
         if self.divide_input:
             x = x.view(-1, self.towers, self.F_in)
@@ -170,9 +171,7 @@ class PNAConv(MessagePassing):
 
         return self.lin(out)
 
-    def message(self, x_i: Tensor, x_j: Tensor,
-                edge_attr: OptTensor) -> Tensor:
-
+    def message(self, x_i: Tensor, x_j: Tensor, edge_attr: OptTensor) -> Tensor:
         h: Tensor = x_i  # Dummy.
         if edge_attr is not None:
             edge_attr = self.edge_encoder(edge_attr)
@@ -186,22 +185,22 @@ class PNAConv(MessagePassing):
         return torch.stack(hs, dim=1)
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}({self.in_channels}, '
-                f'{self.out_channels}, towers={self.towers}, '
-                f'edge_dim={self.edge_dim})')
+        return (
+            f"{self.__class__.__name__}({self.in_channels}, "
+            f"{self.out_channels}, towers={self.towers}, "
+            f"edge_dim={self.edge_dim})"
+        )
 
     @staticmethod
     def get_degree_histogram(loader) -> Tensor:
         max_degree = 0
         for data in loader:
-            d = degree(data.edge_index[1], num_nodes=data.num_nodes,
-                       dtype=torch.long)
+            d = degree(data.edge_index[1], num_nodes=data.num_nodes, dtype=torch.long)
             max_degree = max(max_degree, int(d.max()))
         # Compute the in-degree histogram tensor
         deg_histogram = torch.zeros(max_degree + 1, dtype=torch.long)
         for data in loader:
-            d = degree(data.edge_index[1], num_nodes=data.num_nodes,
-                       dtype=torch.long)
+            d = degree(data.edge_index[1], num_nodes=data.num_nodes, dtype=torch.long)
             deg_histogram += torch.bincount(d, minlength=deg_histogram.numel())
 
         return deg_histogram

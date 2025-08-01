@@ -1,34 +1,34 @@
-# MulConSyn: A Multiscale Conformational Attention Framework for Predicting Synergistic Drug Combinations
+# ConGraSyn: A Conformation Enhanced Graph Attention Framework for Predicting Synergistic Drug Combinations
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16215274.svg)](https://doi.org/10.5281/zenodo.16215274)
 
 This repository contains the official implementation of our paper:  
-**MulConSyn** is a multiscale conformation-aware framework for predicting synergistic drug combinations by integrating 3D-enhanced molecular graphs with PPI-informed and drug-induced cell line features.
+**ConGraSyn** is a scale conformation-aware framework for predicting synergistic drug combinations by integrating 3D-enhanced molecular graphs with PPI-informed and drug-induced cell line features.
 
-<!-- ![MulConSyn Architecture](MulConSyn.png) -->
+<!-- ![ConGraSyn Architecture](ConGraSyn.png) -->
 
-<!-- You can find full documentation here:  [https://HuazeLoong.github.io/MulConSyn/](https://HuazeLoong.github.io/MulConSyn/) -->
+<!-- You can find full documentation here:  [https://HuazeLoong.github.io/ConGraSyn/](https://HuazeLoong.github.io/ConGraSyn/) -->
 
 ## 1. Introduction
 
-MulConSyn represents molecules as heterogeneous molecular graphs and predicts drug combination synergy using graph neural networks.  
+ConGraSyn represents molecules as heterogeneous molecular graphs and predicts drug combination synergy using graph neural networks.  
 It provides substructure-level attention and integrates multi-source data, including PPI and cell lines omics profiles.
 
 **Paper Link**: *Coming soon...*
 
 ## 1.1 Features
-This method explicitly embeds 3D atomic coordinates and interatomic distances in 2D molecular graphs, introduces a multiscale conformational learning (MCL) module to capture local and global structural semantics, and fuses with molecular fingerprints to supplement global structural information. At the same time, the pre-trained TranSiGen model is used to generate drug-induced transcriptome features, which are fused with baseline omics data to characterize the dynamic response of cells to drugs.
+This method explicitly embeds 3D atomic coordinates and interatomic distances in 2D molecular graphs, introduces a scale conformational learning (MCL) module to capture local and global structural semantics, and fuses with molecular fingerprints to supplement global structural information. At the same time, the pre-trained TranSiGen model is used to generate drug-induced transcriptome features, which are fused with baseline omics data to characterize the dynamic response of cells to drugs.
 
 
 ## 1.2 File Structure
 
 ```text
-MulConSyn/             ← Project root directory
+ConGraSyn/             ← Project root directory
 ├── setup.py          ← Packaging and installation configuration
 ├── requirements.txt  ← Dependency management
 ├── README.md         ← Project description
 └── src/
-    └── MulConSyn/         ← Python package (contains all core source code)
+    └── ConGraSyn/         ← Python package (contains all core source code)
         ├── __init__.py
         ├── Datas           ← Data folder
         ├── Model           ← Model script file
@@ -107,11 +107,11 @@ To preprocess the drug combination dataset:
 python prepare_data.py
 ```
 
-Processed files will be saved to `MulConSyn\datas\processed`.
+Processed files will be saved to `ConGraSyn\datas\processed`.
 
 ## 2.3 Train the Model
-To train the MulConSyn model:
+To train the ConGraSyn model:
 ```bash
 python train.py
 ```
-Results will be saved to the `MulConSyn\datas\results` directory.
+Results will be saved to the `ConGraSyn\datas\results` directory.

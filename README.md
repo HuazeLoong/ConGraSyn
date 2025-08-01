@@ -5,7 +5,7 @@
 This repository contains the official implementation of our paper:  
 **ConGraSyn** is a scale conformation-aware framework for predicting synergistic drug combinations by integrating 3D-enhanced molecular graphs with PPI-informed and drug-induced cell line features.
 
-<!-- ![ConGraSyn Architecture](ConGraSyn.png) -->
+![ConGraSyn Architecture](ConGraSyn.png)
 
 <!-- You can find full documentation here:  [https://HuazeLoong.github.io/ConGraSyn/](https://HuazeLoong.github.io/ConGraSyn/) -->
 

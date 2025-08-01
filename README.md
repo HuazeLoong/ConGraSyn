@@ -17,7 +17,7 @@ It provides substructure-level attention and integrates multi-source data, inclu
 **Paper Link**: *Coming soon...*
 
 ## 1.1 Features
-This method explicitly embeds 3D atomic coordinates and interatomic distances in 2D molecular graphs, introduces a scale conformational learning (MCL) module to capture local and global structural semantics, and fuses with molecular fingerprints to supplement global structural information. At the same time, the pre-trained TranSiGen model is used to generate drug-induced transcriptome features, which are fused with baseline omics data to characterize the dynamic response of cells to drugs.
+This method explicitly embeds 3D atomic coordinates and interatomic distances in 2D molecular graphs, introduces a multiscale conformational learning (MCL) module to capture local and global structural semantics, and fuses with molecular fingerprints to supplement global structural information. At the same time, the pre-trained TranSiGen model is used to generate drug-induced transcriptome features, which are fused with baseline omics data to characterize the dynamic response of cells to drugs.
 
 
 ## 1.2 File Structure
